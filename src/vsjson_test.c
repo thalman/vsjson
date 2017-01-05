@@ -10,6 +10,7 @@
 #include "vsjson.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int testing_callback (const char *locator, const char *value, void *data)
@@ -63,6 +64,24 @@ int main() {
     vsjson_walk_trough (v, testing_callback, NULL);
     vsjson_destroy (&v);
 
+    {
+        printf (" * decode ");
+        char *s = "\"this is \\t json \\n string\"";
+        char *d = vsjson_decode_string (s);
+        assert (d);
+        assert (strcmp (d, "this is \t json \n string" ) == 0);
+        free (d);
+        printf ("OK\n");        
+    }
+    {
+        printf (" * encode ");
+        char *s = "this is string";
+        char *d = vsjson_encode_string (s);
+        assert (d);
+        assert (strcmp (d, "\"this is string\"" ) == 0);
+        free (d);
+        printf ("OK\n");
+    }
     
     return 0;
 }

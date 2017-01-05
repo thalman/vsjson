@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#define VSJSON_SEPARATOR "/"
+#define VSJSON_SEPARATOR '/'
 
 typedef struct vsjson vsjson;
 typedef int (vsjson_callback_t)(const char *locator, const char *value, void *data);

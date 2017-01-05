@@ -216,7 +216,7 @@ int _vsjson_walk_object (vsjson *self, const char *prefix, vsjson_callback_t *fu
             goto cleanup;
         case '"':
             // TODO
-            key = strdup (token);
+            key = vsjson_decode_string (token);
             token = vsjson_next_token (self);
             if (strcmp (token, ":") != 0) {
                 result = -1;
@@ -227,7 +227,7 @@ int _vsjson_walk_object (vsjson *self, const char *prefix, vsjson_callback_t *fu
                 result = -1;
                 goto cleanup;
             }
-            asprintf(&locator, "%s%s%s", prefix, VSJSON_SEPARATOR, key);
+            asprintf(&locator, "%s%c%s", prefix, VSJSON_SEPARATOR, key);
             switch (token[0]) {
             case '{':
                 _vsjson_walk_object (self, locator, func, data);
@@ -243,7 +243,7 @@ int _vsjson_walk_object (vsjson *self, const char *prefix, vsjson_callback_t *fu
                 goto cleanup;
             default:
                 // this is the value
-                func (locator, token, data);
+                func (&locator[1], token, data);
                 break;
             }
             free (locator);
@@ -287,7 +287,7 @@ int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *fun
 
     const char *token = vsjson_next_token (self);
     while (token) {
-        asprintf(&locator, "%s%s%i", prefix, VSJSON_SEPARATOR, index);
+        asprintf(&locator, "%s%c%i", prefix, VSJSON_SEPARATOR, index);
         // token should be value or ]
         switch (token[0]) {
         case ']':
@@ -304,7 +304,7 @@ int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *fun
             _vsjson_walk_array (self, locator, func, data);
             break;
         default:
-            func (locator, token, data);
+            func (&locator[1], token, data);
             break;
         }
         free (locator);
@@ -362,13 +362,68 @@ int vsjson_walk_trough (vsjson *self, vsjson_callback_t *func, void *data)
 char *vsjson_decode_string (const char *string)
 {
     if (!string) return NULL;
-    return strdup (string);
+
+    char *decoded = (char *)malloc(strlen (string));
+    memset (decoded, 0, strlen (string));
+    const char *src = string;
+    char *dst = decoded;
+    
+    if (string[0] != '"' || string[strlen (string)-1] != '"') {
+        // no quotes, this is not json string
+        return NULL;
+    }
+    ++src;
+    while(*src) {
+        switch (*src) {
+        case '\\':
+            ++src;
+            switch (*src) {
+            case '\\':
+            case '/':
+            case '"':
+                *dst = *src;
+                ++dst;
+            case 'b':
+                *dst = '\b';
+                ++dst;
+                break;
+            case 'f':
+                *dst = '\f';
+                ++dst;
+                break;
+            case 'n':
+                *dst = '\n';
+                ++dst;
+                break;
+            case 'r':
+                *dst = '\r';
+                ++dst;
+                break;
+            case 't':
+                *dst = '\t';
+                ++dst;
+                break;
+            //TODO \uXXXX
+            }
+            break;
+        default:
+            *dst = *src;
+            ++dst;
+        }
+        ++src;
+    }
+    --dst;
+    *dst = 0;
+    return decoded;
 }
 
 
 char *vsjson_encode_string (const char *string)
 {
     if (!string) return NULL;
-    return strdup (string);
-}
 
+    // TODO: real encoding
+    char *encoded;
+    asprintf (&encoded, "\"%s\"", string);
+    return encoded;
+}
