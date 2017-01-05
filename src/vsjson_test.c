@@ -57,7 +57,9 @@ int main() {
     assert (t == NULL);
     vsjson_destroy (&v);
 
+    //v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
     v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
+    //v = vsjson_new ("{ \"key\":1, \"hey\": {\"jude\":true}");
     vsjson_walk_trough (v, testing_callback, NULL);
     vsjson_destroy (&v);
 

@@ -8,19 +8,15 @@
  */
 
 #include "vsjson.h"
+#define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
 #include <ctype.h>
-
-enum JsonState {
-    NONE,
-    DICT,
-    ARRAY
-};
 
 struct vsjson {
     int state;
@@ -204,47 +200,162 @@ void vsjson_destroy (vsjson **self_p)
     *self_p = NULL;
 }
 
+int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *func, void *data);
+
+int _vsjson_walk_object (vsjson *self, const char *prefix, vsjson_callback_t *func, void *data)
+{
+    int result = 0;
+    char *locator = NULL;
+    char *key;
+
+    const char *token = vsjson_next_token (self);
+    while (token) {
+        // token should be key or }
+        switch (token[0]) {
+        case '}':
+            goto cleanup;
+        case '"':
+            // TODO
+            key = strdup (token);
+            token = vsjson_next_token (self);
+            if (strcmp (token, ":") != 0) {
+                result = -1;
+                goto cleanup;
+            }
+            token = vsjson_next_token (self);
+            if (!token) {
+                result = -1;
+                goto cleanup;
+            }
+            asprintf(&locator, "%s%s%s", prefix, VSJSON_SEPARATOR, key);
+            switch (token[0]) {
+            case '{':
+                _vsjson_walk_object (self, locator, func, data);
+                break;
+            case '[':
+                _vsjson_walk_array (self, locator, func, data);
+                break;
+            case ':':
+            case ',':
+            case '}':
+            case ']':
+                result = -1;
+                goto cleanup;
+            default:
+                // this is the value
+                func (locator, token, data);
+                break;
+            }
+            free (locator);
+            locator = NULL;
+            free (key);
+            key = NULL;
+            break;
+        default:
+            // this is wrong
+            result = -1;
+            goto cleanup;
+        }
+        token = vsjson_next_token (self);
+        // now the token can be only '}' or ','
+        if (!token) {
+            result = -1;
+            goto cleanup;
+        }
+        switch (token[0]) {
+        case ',':
+            token = vsjson_next_token (self);
+            break;
+        case '}':
+            break;
+        default:
+            result = -1;
+            goto cleanup;
+        }
+    }
+ cleanup:
+    if (locator) free (locator);
+    if (key) free (key);
+    return result;
+}
+
+int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *func, void *data)
+{
+    int index = 0;
+    int result = 0;
+    char *locator = NULL;
+
+    const char *token = vsjson_next_token (self);
+    while (token) {
+        asprintf(&locator, "%s%s%i", prefix, VSJSON_SEPARATOR, index);
+        // token should be value or ]
+        switch (token[0]) {
+        case ']':
+            goto cleanup;
+        case ':':
+        case ',':
+        case '}':
+            result = -1;
+            goto cleanup;
+        case '{':
+            _vsjson_walk_object (self, locator, func, data);
+            break;
+        case '[':
+            _vsjson_walk_array (self, locator, func, data);
+            break;
+        default:
+            func (locator, token, data);
+            break;
+        }
+        free (locator);
+        locator = NULL;
+
+        token = vsjson_next_token (self);
+        // now the token can be only ']' or ','
+        if (!token) {
+            result = -1;
+            goto cleanup;
+        }
+        switch (token[0]) {
+        case ',':
+            token = vsjson_next_token (self);
+            ++index;
+            break;
+        case ']':
+            break;
+        default:
+            result = -1;
+            goto cleanup;
+        }
+    }
+ cleanup:
+    if (locator) free (locator);
+    return result;
+}
+
 int vsjson_walk_trough (vsjson *self, vsjson_callback_t *func, void *data)
 {
     if (!self || !func) return -1;
 
-    char stack[100];
-    int arrayindex[100];
     int result = 0;
     
-    int index = -1;
-    char *locator = strdup ("");
-
     const char *token = vsjson_first_token (self);
-    while (token) {
+    if (token) {
         switch (token[0]) {
         case '{':
+            result = _vsjson_walk_object (self, "", func, data);
+            break;
         case '[':
-            stack [++index] = token[0];
-            arrayindex [index] = 0;
-            break;
-        case '}':
-        case ']':
-            --index;
-            break;
-        case ',':
-            break;
-        case ':':
+            result = _vsjson_walk_array (self, "", func, data);
             break;
         default:
-            // this is value
+            // this is bad
+            result = -1;
             break;
         }
-        
-        
-        if (index < 0) {
-            result = 1;
-            goto cleanup;
-        }
-        token = vsjson_next_token (self);        
     }
- cleanup:
-    if (locator) free (locator);
+    token = vsjson_next_token (self);
+    if (token) result = -1;
     return result;
 }
 
