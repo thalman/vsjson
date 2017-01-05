@@ -210,15 +210,42 @@ int vsjson_walk_trough (vsjson *self, vsjson_callback_t *func, void *data)
 
     char stack[100];
     int arrayindex[100];
-
-    int index = 0;
-    char *locator = NULL;
+    int result = 0;
+    
+    int index = -1;
+    char *locator = strdup ("");
 
     const char *token = vsjson_first_token (self);
     while (token) {
+        switch (token[0]) {
+        case '{':
+        case '[':
+            stack [++index] = token[0];
+            arrayindex [index] = 0;
+            break;
+        case '}':
+        case ']':
+            --index;
+            break;
+        case ',':
+            break;
+        case ':':
+            break;
+        default:
+            // this is value
+            break;
+        }
+        
+        
+        if (index < 0) {
+            result = 1;
+            goto cleanup;
+        }
         token = vsjson_next_token (self);        
     }
-    return 0;
+ cleanup:
+    if (locator) free (locator);
+    return result;
 }
 
 char *vsjson_decode_string (const char *string)

@@ -12,6 +12,11 @@
 #include <stdio.h>
 #include <string.h>
 
+int testing_callback (const char *locator, const char *value, void *data)
+{
+    printf("%s -> '%s'\n", locator, value);
+    return 0;
+}
 
 int main() {
     vsjson *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");
@@ -52,5 +57,10 @@ int main() {
     assert (t == NULL);
     vsjson_destroy (&v);
 
+    v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
+    vsjson_walk_trough (v, testing_callback, NULL);
+    vsjson_destroy (&v);
+
+    
     return 0;
 }

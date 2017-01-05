@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 typedef struct vsjson vsjson;
-typedef int (*vsjson_callback_t)(const char *locator, const char *value, void *data);
+typedef int (vsjson_callback_t)(const char *locator, const char *value, void *data);
 
 // minimalized json parser class
 // returns new parser object
