@@ -7,6 +7,11 @@
  * ----------------------------------------------------------------------------
  */
 
+#include "vsjson.h"
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+
 
 int main() {
     vsjson *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");

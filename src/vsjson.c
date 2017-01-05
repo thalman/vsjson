@@ -214,7 +214,7 @@ int vsjson_walk_trough (vsjson *self, vsjson_callback_t *func, void *data)
     int index = 0;
     char *locator = NULL;
 
-    char *token = vsjson_first_token (self);
+    const char *token = vsjson_first_token (self);
     while (token) {
         token = vsjson_next_token (self);        
     }
