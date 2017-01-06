@@ -479,3 +479,12 @@ char *vsjson_encode_string (const char *string)
     encoded [index] = '"';
     return encoded;
 }
+
+int vsjson_parse (const char *json, vsjson_callback_t *func, void *data)
+{
+    if (!json || !func) return -1;
+    vsjson *v = vsjson_new (json);
+    int r = vsjson_walk_trough (v, func, data);
+    vsjson_destroy (&v);
+    return r;
+}

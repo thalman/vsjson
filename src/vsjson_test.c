@@ -151,5 +151,18 @@ int main() {
         free (shape.name);
         printf ("OK\n");
     }
+    {
+        printf (" * parse ");
+        // ---------------------------------
+        shape_t shape;
+        int r = vsjson_parse (rectangle, shape_callback, &shape);
+        assert (r == 0);
+        assert (shape.name);
+        assert (strcmp (shape.name, "rectangle") == 0);
+        assert (shape.height == 20);
+        assert (shape.width == 30);
+        free (shape.name);
+        printf ("OK\n");
+    }
     return 0;
 }

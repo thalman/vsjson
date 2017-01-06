@@ -47,6 +47,8 @@ const char* vsjson_next_token (vsjson *self);
 
 int vsjson_walk_trough (vsjson *self, vsjson_callback_t *func, void *data);
 
+int vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
+
 char *vsjson_decode_string (const char *string);
 
 char *vsjson_encode_string (const char *string);
