@@ -75,10 +75,10 @@ int main() {
     }
     {
         printf (" * encode ");
-        char *s = "this is string";
+        char *s = "this\nis\t\"string\"";
         char *d = vsjson_encode_string (s);
         assert (d);
-        assert (strcmp (d, "\"this is string\"" ) == 0);
+        assert (strcmp (d, "\"this\\nis\\t\\\"string\\\"\"" ) == 0);
         free (d);
         printf ("OK\n");
     }

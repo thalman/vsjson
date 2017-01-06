@@ -422,8 +422,60 @@ char *vsjson_encode_string (const char *string)
 {
     if (!string) return NULL;
 
-    // TODO: real encoding
-    char *encoded;
-    asprintf (&encoded, "\"%s\"", string);
+    int capacity = strlen (string) + 15;
+    int index = 1;
+    const char *p = string;
+
+    char * encoded = (char *)malloc (capacity);
+    memset (encoded, 0, capacity);
+    encoded[0] = '"';
+    while (*p) {
+        switch (*p) {
+        case '"':
+        case '\\':
+        case '/':
+            encoded[index++] = '\\';
+            encoded[index++] = *p;
+            break;
+        case '\b':
+            encoded[index++] = '\\';
+            encoded[index++] = 'b';
+            break;
+        case '\f':
+            encoded[index++] = '\\';
+            encoded[index++] = 'f';
+            break;
+        case '\n':
+            encoded[index++] = '\\';
+            encoded[index++] = 'n';
+            break;
+        case '\r':
+            encoded[index++] = '\\';
+            encoded[index++] = 'r';
+            break;
+        case '\t':
+            encoded[index++] = '\\';
+            encoded[index++] = 't';
+            break;
+        default:
+            encoded[index++] = *p;
+            break;
+        //TODO \uXXXX
+        }
+        p++;
+        if (capacity - index < 10) {
+            int add = strlen (p) + 15;
+            char *ne = (char *) realloc (encoded, capacity + add);
+            if (ne) {
+                encoded = ne;
+                memset (&encoded[capacity], 0, add);
+                capacity += add;
+            }else {
+                free (encoded);
+                return NULL;
+            }
+        }
+    }
+    encoded [index] = '"';
     return encoded;
 }
