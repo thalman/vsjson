@@ -13,59 +13,103 @@
 #include <stdlib.h>
 #include <string.h>
 
-int testing_callback (const char *locator, const char *value, void *data)
+static char *rectangle = 
+"{"
+"   \"name\" : \"rectangle\","
+"   \"size\" : {"
+"       \"height\" : 20,"
+"       \"width\" : 30"
+"   }"
+"}";
+
+typedef struct _shape_t {
+    char *name;
+    int height;
+    int width;
+} shape_t;
+
+int shape_callback (const char *locator, const char *value, void *data)
 {
-    printf("%s -> '%s'\n", locator, value);
+    if (!data) return -2;
+    
+    shape_t *shape = (shape_t *)data;
+    if (strcmp (locator,"name") == 0) {
+        shape->name = vsjson_decode_string (value);
+    }
+    else if (strcmp (locator,"size/height") == 0) {
+        shape->height = atoi (value);
+    }
+    else if (strcmp (locator,"size/width") == 0) {
+        shape->width = atoi (value);
+    }
     return 0;
 }
 
-int main() {
-    vsjson *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");
-    assert(v);
-    const char *t = vsjson_first_token (v);
-    while (t) {
-        printf("%s\n", t);
-        t = vsjson_next_token (v);
+
+int testing_callback (const char *locator, const char *value, void *data)
+{
+    if (data) {
+        *(int *)data += 1;
     }
-    vsjson_destroy (&v);
+    return 0;
+}
 
-    // empty dict
-    v = vsjson_new ("{}  ");
-    t = vsjson_first_token (v);
-    assert (!strcmp (t, "{"));
-    t = vsjson_next_token (v);
-    assert (!strcmp (t, "}"));
-    t = vsjson_next_token (v);
-    assert (t == NULL);
-    vsjson_destroy (&v);
 
-    // empty string
-    v = vsjson_new ("");
-    t = vsjson_first_token (v);
-    assert (t == NULL);
-    vsjson_destroy (&v);
 
-    // broken json
-    v = vsjson_new ("[1");
-    t = vsjson_first_token (v);
-    t = vsjson_next_token (v);
-    assert (t == NULL);
-    vsjson_destroy (&v);
-
-    v = vsjson_new ("{ \"key:1");
-    t = vsjson_first_token (v);
-    t = vsjson_next_token (v);
-    assert (t == NULL);
-    vsjson_destroy (&v);
-
-    //v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
-    v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
-    //v = vsjson_new ("{ \"key\":1, \"hey\": {\"jude\":true}");
-    vsjson_walk_trough (v, testing_callback, NULL);
-    vsjson_destroy (&v);
-
+int main() {
+    {
+        printf (" * walking trough tokens ");
+        // ---------------------------------
+        vsjson *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");
+        assert(v);
+        const char *t = vsjson_first_token (v);
+        while (t) {
+            t = vsjson_next_token (v);
+        }
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
+    {
+        printf (" * empty dict ");
+        // ---------------------------------
+        vsjson *v = vsjson_new ("{}  ");
+        const char *t = vsjson_first_token (v);
+        assert (!strcmp (t, "{"));
+        t = vsjson_next_token (v);
+        assert (!strcmp (t, "}"));
+        t = vsjson_next_token (v);
+        assert (t == NULL);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
+    {
+        printf (" * empty string ");
+        // ---------------------------------
+        vsjson *v = vsjson_new ("");
+        const char *t = vsjson_first_token (v);
+        assert (t == NULL);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
+    {
+        printf (" * broken json ");
+        // ---------------------------------
+        vsjson *v = vsjson_new ("[1");
+        const char *t = vsjson_first_token (v);
+        t = vsjson_next_token (v);
+        assert (t == NULL);
+        vsjson_destroy (&v);
+        
+        v = vsjson_new ("{ \"key:1");
+        t = vsjson_first_token (v);
+        t = vsjson_next_token (v);
+        assert (t == NULL);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
     {
         printf (" * decode ");
+        // ---------------------------------
         char *s = "\"this is \\t json \\n string\"";
         char *d = vsjson_decode_string (s);
         assert (d);
@@ -75,6 +119,7 @@ int main() {
     }
     {
         printf (" * encode ");
+        // ---------------------------------
         char *s = "this\nis\t\"string\"";
         char *d = vsjson_encode_string (s);
         assert (d);
@@ -82,6 +127,29 @@ int main() {
         free (d);
         printf ("OK\n");
     }
-    
+    {
+        printf (" * simple callback ");
+        int called = 0;
+        vsjson *v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
+        vsjson_walk_trough (v, testing_callback, &called);
+        assert (called == 3);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
+    {
+        printf (" * filling callback ");
+        // ---------------------------------
+        shape_t shape;
+        vsjson *v = vsjson_new (rectangle);
+        vsjson_walk_trough (v, shape_callback, &shape);
+        vsjson_destroy (&v);
+
+        assert (shape.name);
+        assert (strcmp (shape.name, "rectangle") == 0);
+        assert (shape.height == 20);
+        assert (shape.width == 30);
+        free (shape.name);
+        printf ("OK\n");
+    }
     return 0;
 }
