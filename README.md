@@ -41,7 +41,7 @@ typedef struct _shape_t {
 // callback function
 int shape_callback (const char *locator, const char *value, void *data)
 {
-    if (!data) return -2;
+    if (!data) return 1;
     
     shape_t *shape = (shape_t *)data;
     if (strcmp (locator,"name") == 0) {
