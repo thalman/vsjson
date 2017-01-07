@@ -18,7 +18,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-struct vsjson {
+struct _vsjson_t {
     int state;
     const char *cursor;
     char *text;
@@ -26,18 +26,18 @@ struct vsjson {
     int tokensize;
 };
 
-vsjson *vsjson_new (const char *json)
+vsjson_t *vsjson_new (const char *json)
 {
     if (!json) return NULL;
-    vsjson *self = (vsjson *)malloc (sizeof (vsjson));
+    vsjson_t *self = (vsjson_t *)malloc (sizeof (vsjson_t));
     if (!self) return NULL;
     
-    memset(self, 0, sizeof(vsjson));
+    memset(self, 0, sizeof(vsjson_t));
     self->text = strdup (json);
     return self;
 }
 
-const char *_vsjson_set_token (vsjson *self, const char *ptr, size_t len)
+const char *_vsjson_set_token (vsjson_t *self, const char *ptr, size_t len)
 {
     if (!ptr || !self) return NULL;
     
@@ -61,7 +61,7 @@ const char *_vsjson_set_token (vsjson *self, const char *ptr, size_t len)
     return self->token;
 }
 
-const char* _vsjson_seek_to_next_token(vsjson *self)
+const char* _vsjson_seek_to_next_token(vsjson_t *self)
 {
     if (!self) return NULL;
     
@@ -72,7 +72,7 @@ const char* _vsjson_seek_to_next_token(vsjson *self)
     }
 }
 
-const char* _vsjson_find_next_token(vsjson *self, const char *start)
+const char* _vsjson_find_next_token(vsjson_t *self, const char *start)
 {
     if (!self) return NULL;
     
@@ -85,7 +85,7 @@ const char* _vsjson_find_next_token(vsjson *self, const char *start)
     }
 }
 
-const char* _vsjson_find_string_end(vsjson *self, const char *start)
+const char* _vsjson_find_string_end(vsjson_t *self, const char *start)
 {
     if (!self || !start) return NULL;
 
@@ -107,7 +107,7 @@ const char* _vsjson_find_string_end(vsjson *self, const char *start)
     }
 }
 
-const char* _vsjson_find_number_end(vsjson *self, const char *start)
+const char* _vsjson_find_number_end(vsjson_t *self, const char *start)
 {
     if (!self || !start) return NULL;
 
@@ -124,7 +124,7 @@ const char* _vsjson_find_number_end(vsjson *self, const char *start)
     }
 }
 
-const char* _vsjson_find_keyword_end(vsjson *self, const char *start)
+const char* _vsjson_find_keyword_end(vsjson_t *self, const char *start)
 {
     if (!self || !start) return NULL;
 
@@ -141,7 +141,7 @@ const char* _vsjson_find_keyword_end(vsjson *self, const char *start)
     }
 }
 
-const char* _vsjson_find_token_end(vsjson *self, const char *start)
+const char* _vsjson_find_token_end(vsjson_t *self, const char *start)
 {
     if (!self || !start) return NULL;
 
@@ -161,7 +161,7 @@ const char* _vsjson_find_token_end(vsjson *self, const char *start)
     return NULL;
 }
 
-const char* vsjson_first_token (vsjson *self)
+const char* vsjson_first_token (vsjson_t *self)
 {
     if (!self) return NULL;
     self->cursor = _vsjson_find_next_token (self, NULL);
@@ -175,7 +175,7 @@ const char* vsjson_first_token (vsjson *self)
     return NULL;
 }
 
-const char* vsjson_next_token (vsjson *self)
+const char* vsjson_next_token (vsjson_t *self)
 {
     if (!self) return NULL;
     self->cursor = _vsjson_find_next_token (self, self->cursor);
@@ -189,20 +189,20 @@ const char* vsjson_next_token (vsjson *self)
     return NULL;
 }
 
-void vsjson_destroy (vsjson **self_p)
+void vsjson_destroy (vsjson_t **self_p)
 {
     if (!self_p) return;
     if (!*self_p) return;
-    vsjson *self = *self_p;
+    vsjson_t *self = *self_p;
     if (self->text) free (self->text);
     if (self->token) free (self->token);
     free (self);
     *self_p = NULL;
 }
 
-int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *func, void *data);
+int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *func, void *data);
 
-int _vsjson_walk_object (vsjson *self, const char *prefix, vsjson_callback_t *func, void *data)
+int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *func, void *data)
 {
     int result = 0;
     char *locator = NULL;
@@ -279,7 +279,7 @@ int _vsjson_walk_object (vsjson *self, const char *prefix, vsjson_callback_t *fu
     return result;
 }
 
-int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *func, void *data)
+int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *func, void *data)
 {
     int index = 0;
     int result = 0;
@@ -333,7 +333,7 @@ int _vsjson_walk_array (vsjson *self, const char *prefix, vsjson_callback_t *fun
     return result;
 }
 
-int vsjson_walk_trough (vsjson *self, vsjson_callback_t *func, void *data)
+int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data)
 {
     if (!self || !func) return -1;
 
@@ -483,7 +483,7 @@ char *vsjson_encode_string (const char *string)
 int vsjson_parse (const char *json, vsjson_callback_t *func, void *data)
 {
     if (!json || !func) return -1;
-    vsjson *v = vsjson_new (json);
+    vsjson_t *v = vsjson_new (json);
     int r = vsjson_walk_trough (v, func, data);
     vsjson_destroy (&v);
     return r;

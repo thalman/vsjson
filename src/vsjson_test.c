@@ -60,7 +60,7 @@ int main() {
     {
         printf (" * walking trough tokens ");
         // ---------------------------------
-        vsjson *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");
+        vsjson_t *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");
         assert(v);
         const char *t = vsjson_first_token (v);
         while (t) {
@@ -72,7 +72,7 @@ int main() {
     {
         printf (" * empty dict ");
         // ---------------------------------
-        vsjson *v = vsjson_new ("{}  ");
+        vsjson_t *v = vsjson_new ("{}  ");
         const char *t = vsjson_first_token (v);
         assert (!strcmp (t, "{"));
         t = vsjson_next_token (v);
@@ -85,7 +85,7 @@ int main() {
     {
         printf (" * empty string ");
         // ---------------------------------
-        vsjson *v = vsjson_new ("");
+        vsjson_t *v = vsjson_new ("");
         const char *t = vsjson_first_token (v);
         assert (t == NULL);
         vsjson_destroy (&v);
@@ -94,7 +94,7 @@ int main() {
     {
         printf (" * broken json ");
         // ---------------------------------
-        vsjson *v = vsjson_new ("[1");
+        vsjson_t *v = vsjson_new ("[1");
         const char *t = vsjson_first_token (v);
         t = vsjson_next_token (v);
         assert (t == NULL);
@@ -130,7 +130,7 @@ int main() {
     {
         printf (" * simple callback ");
         int called = 0;
-        vsjson *v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
+        vsjson_t *v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
         vsjson_walk_trough (v, testing_callback, &called);
         assert (called == 3);
         vsjson_destroy (&v);
@@ -140,7 +140,7 @@ int main() {
         printf (" * filling callback ");
         // ---------------------------------
         shape_t shape;
-        vsjson *v = vsjson_new (rectangle);
+        vsjson_t *v = vsjson_new (rectangle);
         vsjson_walk_trough (v, shape_callback, &shape);
         vsjson_destroy (&v);
 
