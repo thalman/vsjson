@@ -17,6 +17,9 @@ Example:
 
 #include "vsjson.h"
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 // this is json we are going to parse
 static char *rectangle = 
