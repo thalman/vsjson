@@ -30,7 +30,7 @@ typedef struct _shape_t {
 
 int shape_callback (const char *locator, const char *value, void *data)
 {
-    if (!data) return -2;
+    if (!data) return 1;
     
     shape_t *shape = (shape_t *)data;
     if (strcmp (locator,"name") == 0) {
@@ -162,6 +162,13 @@ int main() {
         assert (shape.height == 20);
         assert (shape.width == 30);
         free (shape.name);
+        printf ("OK\n");
+    }
+    {
+        printf (" * callback func terminates early ");
+        // -----------------------------------------
+        int r = vsjson_parse (rectangle, shape_callback, NULL);
+        assert (r == 1);
         printf ("OK\n");
     }
     return 0;

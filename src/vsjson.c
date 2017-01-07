@@ -230,10 +230,12 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
             asprintf(&locator, "%s%c%s", prefix, VSJSON_SEPARATOR, key);
             switch (token[0]) {
             case '{':
-                _vsjson_walk_object (self, locator, func, data);
+                result = _vsjson_walk_object (self, locator, func, data);
+                if (result != 0) goto cleanup;
                 break;
             case '[':
-                _vsjson_walk_array (self, locator, func, data);
+                result = _vsjson_walk_array (self, locator, func, data);
+                if (result != 0) goto cleanup;
                 break;
             case ':':
             case ',':
@@ -243,7 +245,8 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
                 goto cleanup;
             default:
                 // this is the value
-                func (&locator[1], token, data);
+                result = func (&locator[1], token, data);
+                if (result != 0) goto cleanup;
                 break;
             }
             free (locator);
@@ -298,13 +301,16 @@ int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *f
             result = -1;
             goto cleanup;
         case '{':
-            _vsjson_walk_object (self, locator, func, data);
+            result = _vsjson_walk_object (self, locator, func, data);
+            if (result != 0) goto cleanup;
             break;
         case '[':
-            _vsjson_walk_array (self, locator, func, data);
+            result = _vsjson_walk_array (self, locator, func, data);
+            if (result != 0) goto cleanup;
             break;
         default:
-            func (&locator[1], token, data);
+            result = func (&locator[1], token, data);
+            if (result != 0) goto cleanup;
             break;
         }
         free (locator);
@@ -354,8 +360,10 @@ int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data)
             break;
         }
     }
-    token = vsjson_next_token (self);
-    if (token) result = -1;
+    if (result == 0) {
+        token = vsjson_next_token (self);
+        if (token) result = -1;
+    }
     return result;
 }
 
