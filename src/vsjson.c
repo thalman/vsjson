@@ -8,7 +8,6 @@
  */
 
 #include "vsjson.h"
-#define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +28,7 @@ struct _vsjson_t {
 vsjson_t *vsjson_new (const char *json)
 {
     if (!json) return NULL;
-    vsjson_t *self = (vsjson_t *)malloc (sizeof (vsjson_t));
+    vsjson_t *self = (vsjson_t *) malloc (sizeof (vsjson_t));
     if (!self) return NULL;
     
     memset(self, 0, sizeof(vsjson_t));
@@ -227,7 +226,13 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
                 result = -1;
                 goto cleanup;
             }
-            asprintf(&locator, "%s%c%s", prefix, VSJSON_SEPARATOR, key);
+            size_t s = strlen (prefix) + strlen (key) + 2;
+            locator = (char *)malloc (s);
+            if (!locator) {
+                result = -2;
+                goto cleanup;
+            }
+            snprintf(locator, s, "%s%c%s", prefix, VSJSON_SEPARATOR, key);
             switch (token[0]) {
             case '{':
                 result = _vsjson_walk_object (self, locator, func, data);
@@ -290,7 +295,13 @@ int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *f
 
     const char *token = vsjson_next_token (self);
     while (token) {
-        asprintf(&locator, "%s%c%i", prefix, VSJSON_SEPARATOR, index);
+        size_t s = strlen (prefix) + 1 + sizeof (index)*3 + 1;
+        locator = (char *) malloc (s);
+        if (!locator) {
+            result = -2;
+            goto cleanup;
+        }
+        snprintf(locator, s, "%s%c%i", prefix, VSJSON_SEPARATOR, index);
         // token should be value or ]
         switch (token[0]) {
         case ']':
@@ -371,7 +382,9 @@ char *vsjson_decode_string (const char *string)
 {
     if (!string) return NULL;
 
-    char *decoded = (char *)malloc(strlen (string));
+    char *decoded = (char *) malloc (strlen (string));
+    if (!decoded) return NULL;
+
     memset (decoded, 0, strlen (string));
     const char *src = string;
     char *dst = decoded;
@@ -434,7 +447,8 @@ char *vsjson_encode_string (const char *string)
     int index = 1;
     const char *p = string;
 
-    char * encoded = (char *)malloc (capacity);
+    char * encoded = (char *) malloc (capacity);
+    if (!encoded) return NULL;
     memset (encoded, 0, capacity);
     encoded[0] = '"';
     while (*p) {
