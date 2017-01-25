@@ -171,5 +171,37 @@ int main() {
         assert (r == 1);
         printf ("OK\n");
     }
+    {
+        printf (" * invalid json token ");
+        // -----------------------------------------
+        int called = 0;
+        vsjson_t *v = vsjson_new ("{ \"key\" : NIL }");
+        int r = vsjson_walk_trough (v, testing_callback, &called);
+        assert (called == 0);
+        assert (r == -3);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
+    {
+        printf (" * primitive json ");
+        // -----------------------------------------
+        int called = 0;
+        vsjson_t *v = vsjson_new ("true");
+        int r = vsjson_walk_trough (v, testing_callback, &called);
+        assert (called == 1);
+        assert (r == 0);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
+    {
+        printf (" * invalid list ");
+        // -----------------------------------------
+        int called = 0;
+        vsjson_t *v = vsjson_new ("true, false");
+        int r = vsjson_walk_trough (v, testing_callback, &called);
+        assert (r != 0);
+        vsjson_destroy (&v);
+        printf ("OK\n");
+    }
     return 0;
 }

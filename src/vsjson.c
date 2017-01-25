@@ -131,7 +131,7 @@ const char* _vsjson_find_keyword_end(vsjson_t *self, const char *start)
     if (!isalpha (*p)) return NULL;
     ++p;
     while (true) {
-        if (*p == 0) return NULL;
+        if (*p == 0) return p;
         if(isalpha (*p)) {
             ++p;
         } else {
@@ -158,6 +158,32 @@ const char* _vsjson_find_token_end(vsjson_t *self, const char *start)
         return _vsjson_find_keyword_end (self, p);
     }
     return NULL;
+}
+
+int vsjson_is_token_valid (vsjson_t *self)
+{
+    if (!self || !self -> token) return 0;
+    if (strchr ("{}[]:,",self->token[0]) && (self->token[1] == 0)) {
+        return 1;
+    }
+    if (strchr ("+-0123456789", self -> token [0])) {
+        // TODO: validate json number?
+        return 1;
+    }
+    switch (self->token[0]) {
+    case '"':
+        if (self->token [strlen (self -> token)-1] == '"' && strlen (self -> token) >= 2) {
+            return 1;
+        }
+        return 0;
+    case 't':
+        if (strcmp (self -> token, "true") == 0) return 1;
+    case 'f':
+        if (strcmp (self -> token, "false") == 0) return 1;
+    case 'n':
+        if (strcmp (self -> token, "null") == 0) return 1;
+    }
+    return 0;
 }
 
 const char* vsjson_first_token (vsjson_t *self)
@@ -214,7 +240,6 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
         case '}':
             goto cleanup;
         case '"':
-            // TODO
             key = vsjson_decode_string (token);
             token = vsjson_next_token (self);
             if (strcmp (token, ":") != 0) {
@@ -250,7 +275,11 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
                 goto cleanup;
             default:
                 // this is the value
-                result = func (&locator[1], token, data);
+                if (vsjson_is_token_valid (self)) {
+                    result = func (&locator[1], token, data);
+                } else {
+                    result = -3;
+                }
                 if (result != 0) goto cleanup;
                 break;
             }
@@ -320,7 +349,11 @@ int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *f
             if (result != 0) goto cleanup;
             break;
         default:
-            result = func (&locator[1], token, data);
+            if (vsjson_is_token_valid (self)) {
+                result = func (&locator[1], token, data);
+            } else {
+                result = -3;
+            }
             if (result != 0) goto cleanup;
             break;
         }
@@ -366,8 +399,12 @@ int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data)
             result = _vsjson_walk_array (self, "", func, data);
             break;
         default:
-            // this is bad
-            result = -1;
+            // this is simple json containing just string, number ...
+            if (vsjson_is_token_valid (self)) {
+                result = func ("", token, data);
+            } else {
+                result = -1;
+            }
             break;
         }
     }
