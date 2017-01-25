@@ -71,3 +71,8 @@ int main ()
     return 0;
 }
 ```
+
+## Known limitation
+
+* String escape/unescape \uXXXX is not implemented
+* Works fine with ASCII/UTF-8 json, UTF-16 is not supported
