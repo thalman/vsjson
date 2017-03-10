@@ -204,5 +204,16 @@ int main() {
         vsjson_destroy (&v);
         printf ("OK\n");
     }
+    {
+        printf (" * encode/decode ");
+        // -----------------------------------------
+        const char *text = "A/B\n\t\\C";
+        char *encoded = vsjson_encode_string (text);
+        char *decoded = vsjson_decode_string (encoded);
+        assert (strcmp (text,decoded)==0);
+        free (encoded);
+        free (decoded);
+        printf ("OK\n");
+    }
     return 0;
 }
