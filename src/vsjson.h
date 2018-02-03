@@ -23,6 +23,13 @@ typedef struct _vsjson_t vsjson_t;
 //  You MUST return 0 if you wish to continue parsing, non-zero otherwise.
 typedef int (vsjson_callback_t)(const char *locator, const char *value, void *data);
 
+//  Main (and easiest) way to parse a json encoded input string and execute a
+//  callback function for each item.
+//  Returns 0 on success, non-zero otherwise
+int
+vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
+
+
 // minimalized json parser class
 // returns new parser object
 // parameter is json string
@@ -51,9 +58,6 @@ const char* vsjson_next_token (vsjson_t *self);
 
 //  Returns 0 on success, non-zero otherwise
 int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data);
-
-//  Returns 0 on success, non-zero otherwise
-int vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
 
 char *vsjson_decode_string (const char *string);
 
