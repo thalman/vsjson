@@ -46,8 +46,10 @@ const char* vsjson_first_token (vsjson_t *self);
 //     vsjson_destroy (&parser);
 const char* vsjson_next_token (vsjson_t *self);
 
+//  Returns 0 on success, non-zero otherwise
 int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data);
 
+//  Returns 0 on success, non-zero otherwise
 int vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
 
 char *vsjson_decode_string (const char *string);
