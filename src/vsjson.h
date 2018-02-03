@@ -18,6 +18,9 @@ extern "C" {
 #define VSJSON_SEPARATOR '/'
 
 typedef struct _vsjson_t vsjson_t;
+
+//  Callback function prototype; gets called for each parsable item.
+//  You MUST return 0 if you wish to continue parsing, non-zero otherwise.
 typedef int (vsjson_callback_t)(const char *locator, const char *value, void *data);
 
 // minimalized json parser class
