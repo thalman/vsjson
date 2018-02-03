@@ -30,14 +30,15 @@ int
 vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
 
 
-// minimalized json parser class
-// returns new parser object
-// parameter is json string
-// call vsjson_destroy to free the parser
-vsjson_t *vsjson_new (const char *json);
+//  Create a new parser object from input json string
+//  Returns NULL if not enough memory.
+//  You must call `vsjson_destroy ()` to destroy newly allocated parser object.
+vsjson_t *
+vsjson_new (const char *json);
 
-// destructor of json parser
-void vsjson_destroy (vsjson_t **self_p);
+//  Destroy parser object
+void
+vsjson_destroy (vsjson_t **self_p);
 
 // get first json token, usually "[" or "{"
 // tokens are [ ] { } , : string (quote included)
