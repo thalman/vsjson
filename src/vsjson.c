@@ -18,26 +18,70 @@
 #include <assert.h>
 #include <ctype.h>
 
+#define VSJSON_DEFAULT_SEPARATOR '/'
+
 struct _vsjson_t {
     int state;
     const char *cursor;
     char *text;
     char *token;
     int tokensize;
+    char separator;
 };
 
-vsjson_t *vsjson_new (const char *json)
+
+//  --------------------------------------------------------------------------
+//  
+
+vsjson_t *
+vsjson_new (const char *json)
 {
-    if (!json) return NULL;
+    if (!json)
+        return NULL;
+
     vsjson_t *self = (vsjson_t *) malloc (sizeof (vsjson_t));
-    if (!self) return NULL;
+    if (!self)
+        return NULL;
     
-    memset(self, 0, sizeof(vsjson_t));
+    memset (self, 0, sizeof (vsjson_t));
+    
     self->text = strdup (json);
+    if (!self->text)
+        return NULL;
+
+    self->separator = VSJSON_DEFAULT_SEPARATOR;
+
     return self;
 }
 
-const char *_vsjson_set_token (vsjson_t *self, const char *ptr, size_t len)
+
+//  --------------------------------------------------------------------------
+//  Get json item separator character
+
+char
+vsjson_separator (vsjson_t *self)
+{
+    assert (self);
+    return self->separator;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Set json item separator character
+
+void
+vsjson_set_separator (vsjson_t *self, char separator)
+{
+    assert (self);
+    self->separator = separator;
+}
+
+
+//  --------------------------------------------------------------------------
+//
+
+const char *
+_vsjson_set_token (vsjson_t *self, const char *ptr, size_t len)
 {
     if (!ptr || !self) return NULL;
     
@@ -258,7 +302,7 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
                 result = -2;
                 goto cleanup;
             }
-            snprintf(locator, s, "%s%c%s", prefix, VSJSON_SEPARATOR, key);
+            snprintf(locator, s, "%s%c%s", prefix, self->separator, key);
             switch (token[0]) {
             case '{':
                 result = _vsjson_walk_object (self, locator, func, data);
@@ -331,7 +375,7 @@ int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *f
             result = -2;
             goto cleanup;
         }
-        snprintf(locator, s, "%s%c%i", prefix, VSJSON_SEPARATOR, index);
+        snprintf(locator, s, "%s%c%i", prefix, self->separator, index);
         // token should be value or ]
         switch (token[0]) {
         case ']':

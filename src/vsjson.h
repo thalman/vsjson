@@ -51,6 +51,14 @@ vsjson_t *
 void
     vsjson_destroy (vsjson_t **self_p);
 
+//  Get json item separator character
+char
+    vsjson_separator (vsjson_t *self);
+
+//  Set json item separator character
+void
+    vsjson_set_separator (vsjson_t *self, char separator);
+
 // get first json token, usually "[" or "{"
 // tokens are [ ] { } , : string (quote included)
 // number or keyword like null
