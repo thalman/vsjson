@@ -29,6 +29,18 @@ typedef int (vsjson_callback_t)(const char *locator, const char *value, void *da
 int
     vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
 
+//  Decode json string
+//  Returns newly allocated decoded string or NULL on error.
+//  You MUST free returned string with `free ()` or `zstr_free ()`
+char *
+    vsjson_decode_string (const char *string);
+
+//  Encode json string
+//  Returns newly allocated encoded string or NULL on error.
+//  You MUST free returned string with `free ()` or `zstr_free ()`
+char *
+    vsjson_encode_string (const char *string);
+
 //  Create a new parser object from input json string
 //  Returns NULL if not enough memory.
 //  You must call `vsjson_destroy ()` to destroy newly allocated parser object.
@@ -59,9 +71,6 @@ const char* vsjson_next_token (vsjson_t *self);
 //  Returns 0 on success, non-zero otherwise
 int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data);
 
-char *vsjson_decode_string (const char *string);
-
-char *vsjson_encode_string (const char *string);
 
 #ifdef __cplusplus
 }
