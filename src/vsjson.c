@@ -384,7 +384,7 @@ int _vsjson_walk_array (vsjson_t *self, const char *prefix, vsjson_callback_t *f
     return result;
 }
 
-int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data)
+int vsjson_walk_through (vsjson_t *self, vsjson_callback_t *func, void *data)
 {
     if (!self || !func) return -1;
 
@@ -546,7 +546,7 @@ int vsjson_parse (const char *json, vsjson_callback_t *func, void *data)
 {
     if (!json || !func) return -1;
     vsjson_t *v = vsjson_new (json);
-    int r = vsjson_walk_trough (v, func, data);
+    int r = vsjson_walk_through (v, func, data);
     vsjson_destroy (&v);
     return r;
 }

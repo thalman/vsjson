@@ -69,7 +69,7 @@ const char* vsjson_first_token (vsjson_t *self);
 const char* vsjson_next_token (vsjson_t *self);
 
 //  Returns 0 on success, non-zero otherwise
-int vsjson_walk_trough (vsjson_t *self, vsjson_callback_t *func, void *data);
+int vsjson_walk_through (vsjson_t *self, vsjson_callback_t *func, void *data);
 
 
 #ifdef __cplusplus
