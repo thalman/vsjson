@@ -27,6 +27,7 @@ struct _vsjson_t {
     char *token;
     int tokensize;
     char separator;
+    char exclude;
 };
 
 
@@ -50,6 +51,7 @@ vsjson_new (const char *json)
         return NULL;
 
     self->separator = VSJSON_DEFAULT_SEPARATOR;
+    assert (self->exclude == '\0');
 
     return self;
 }
@@ -74,6 +76,29 @@ vsjson_set_separator (vsjson_t *self, char separator)
 {
     assert (self);
     self->separator = separator;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Get exclude character
+
+char
+vsjson_exclude (vsjson_t *self)
+{
+    assert (self);
+    return self->exclude;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Set exclude character
+
+void
+vsjson_set_exclude (vsjson_t *self, char exclude)
+{
+    assert (self);
+    if (exclude != '\0')
+        self->exclude = exclude;
 }
 
 
@@ -302,7 +327,16 @@ int _vsjson_walk_object (vsjson_t *self, const char *prefix, vsjson_callback_t *
                 result = -2;
                 goto cleanup;
             }
-            snprintf(locator, s, "%s%c%s", prefix, self->separator, key);
+            if (self->exclude != '\0') {
+                char *needle = strchr (key, self->exclude);
+                if (needle) {
+                    memmove (needle, needle + 1, strlen (needle));
+                }
+                snprintf (locator, s, "%s%c%s", prefix, self->separator, key);
+            }
+            else
+               snprintf (locator, s, "%s%c%s", prefix, self->separator, key);
+            
             switch (token[0]) {
             case '{':
                 result = _vsjson_walk_object (self, locator, func, data);

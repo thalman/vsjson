@@ -59,6 +59,15 @@ char
 void
     vsjson_set_separator (vsjson_t *self, char separator);
 
+//  Return exclude character or '\0' if not set.
+char
+    vsjson_exclude (vsjson_t *self);
+
+//  Set exclude character. Use '\0' to disable.
+//  If set, this character is removed from each property's key.
+void
+    vsjson_set_exclude (vsjson_t *self, char exclude);
+
 // get first json token, usually "[" or "{"
 // tokens are [ ] { } , : string (quote included)
 // number or keyword like null
