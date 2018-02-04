@@ -8,4 +8,4 @@ check: vsjson_test
 	./vsjson_test
 
 memcheck: vsjson_test
-	valgrind ./vsjson_test
+	valgrind --tool=memcheck --leak-check=full --show-reachable=yes --error-exitcode=1 ./vsjson_test
