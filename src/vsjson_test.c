@@ -23,11 +23,34 @@ static char *rectangle =
 "   }"
 "}";
 
+static char *exclude =
+"{"
+"    \"client\" : \"Alfonz Tekvicka\","
+"    \"mlm/server\" : {"
+"        \"name\" : \"Jon/Doe\","
+"        \"bi/nd\" : {"
+"            \"endpoint\" : \"tcp://*:9999\""
+"        },"         
+"        \"security\" : {"
+"            \"mechanism\" : \"plain\""
+"        }"
+"    },"
+"    \"bin/d\" : \"no\""
+"}";
+
 typedef struct _shape_t {
     char *name;
     int height;
     int width;
 } shape_t;
+
+typedef struct _exclude_t {
+    char *client;
+    char *mlmserver_name;
+    char *mlmserver_bind_endpoint;
+    char *mlmserver_security_mechanism;
+    char *bind;
+} exclude_t;
 
 int shape_callback (const char *locator, const char *value, void *data)
 {
@@ -55,11 +78,44 @@ int testing_callback (const char *locator, const char *value, void *data)
     return 0;
 }
 
+int
+exclude_callback (const char *locator, const char *value, void *data)
+{
+    assert (locator);
+    assert (value);
+
+    exclude_t *exclude = (exclude_t *) data;
+
+    if (strcmp (locator, "client") == 0) {
+        exclude->client = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "mlmserver/name") == 0) {
+        exclude->mlmserver_name = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "mlmserver/bind/endpoint") == 0) {
+        exclude->mlmserver_bind_endpoint = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "mlmserver/security/mechanism") == 0) {
+        exclude->mlmserver_security_mechanism = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "bind") == 0) {
+        exclude->bind = vsjson_decode_string (value);
+    }
+    else
+        return -1;
+
+    return 0;
+}
+
 
 
 int main() {
     {
-        printf (" * walking trough tokens ");
+        printf (" * walking through tokens ");
         // ---------------------------------
         vsjson_t *v = vsjson_new ("{ \"a\":\"avalue\"\n,\n\"b\": +31.4e-1, 3 : null, \"array\": [1,2,3]}");
         assert(v);
@@ -132,7 +188,7 @@ int main() {
         printf (" * simple callback ");
         int called = 0;
         vsjson_t *v = vsjson_new ("{ \"key\":1, \"hey\": [\"jude\", \"you\"] }");
-        vsjson_walk_trough (v, testing_callback, &called);
+        vsjson_walk_through (v, testing_callback, &called);
         assert (called == 3);
         vsjson_destroy (&v);
         printf ("OK\n");
@@ -142,7 +198,7 @@ int main() {
         // ---------------------------------
         shape_t shape;
         vsjson_t *v = vsjson_new (rectangle);
-        vsjson_walk_trough (v, shape_callback, &shape);
+        vsjson_walk_through (v, shape_callback, &shape);
         vsjson_destroy (&v);
 
         assert (shape.name);
@@ -177,7 +233,7 @@ int main() {
         // -----------------------------------------
         int called = 0;
         vsjson_t *v = vsjson_new ("{ \"key\" : NIL }");
-        int r = vsjson_walk_trough (v, testing_callback, &called);
+        int r = vsjson_walk_through (v, testing_callback, &called);
         assert (called == 0);
         assert (r == -3);
         vsjson_destroy (&v);
@@ -188,7 +244,7 @@ int main() {
         // -----------------------------------------
         int called = 0;
         vsjson_t *v = vsjson_new ("true");
-        int r = vsjson_walk_trough (v, testing_callback, &called);
+        int r = vsjson_walk_through (v, testing_callback, &called);
         assert (called == 1);
         assert (r == 0);
         vsjson_destroy (&v);
@@ -199,7 +255,7 @@ int main() {
         // -----------------------------------------
         int called = 0;
         vsjson_t *v = vsjson_new ("true, false");
-        int r = vsjson_walk_trough (v, testing_callback, &called);
+        int r = vsjson_walk_through (v, testing_callback, &called);
         assert (r != 0);
         vsjson_destroy (&v);
         printf ("OK\n");
@@ -213,6 +269,30 @@ int main() {
         assert (strcmp (text,decoded)==0);
         free (encoded);
         free (decoded);
+        printf ("OK\n");
+    }
+    {
+        printf (" * exclude ");
+        // -----------------------------------------
+        vsjson_t *vsjson = vsjson_new (exclude);
+        assert (vsjson);
+
+        vsjson_set_exclude (vsjson, '/');
+        assert (vsjson_exclude (vsjson) == '/');
+
+        exclude_t exclude;
+        memset (&exclude, 0, sizeof (exclude_t));
+
+        int rv = vsjson_walk_through (vsjson, exclude_callback, &exclude);
+        assert (rv == 0);
+
+        assert (strcmp (exclude.client, "Alfonz Tekvicka") == 0);
+        assert (strcmp (exclude.mlmserver_name, "Jon/Doe") == 0);
+        assert (strcmp (exclude.mlmserver_bind_endpoint, "tcp://*:9999") == 0);
+        assert (strcmp (exclude.mlmserver_security_mechanism, "plain") == 0);
+        assert (strcmp (exclude.bind, "no") == 0);
+
+        vsjson_destroy (&vsjson);
         printf ("OK\n");
     }
     return 0;
