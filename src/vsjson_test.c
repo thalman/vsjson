@@ -111,6 +111,38 @@ exclude_callback (const char *locator, const char *value, void *data)
     return 0;
 }
 
+int
+separator_callback (const char *locator, const char *value, void *data)
+{
+    assert (locator);
+    assert (value);
+
+    exclude_t *exclude = (exclude_t *) data;
+
+    if (strcmp (locator, "client") == 0) {
+        exclude->client = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "mlm/server#name") == 0) {
+        exclude->mlmserver_name = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "mlm/server#bi/nd#endpoint") == 0) {
+        exclude->mlmserver_bind_endpoint = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "mlm/server#security#mechanism") == 0) {
+        exclude->mlmserver_security_mechanism = vsjson_decode_string (value);
+    }
+    else
+    if (strcmp (locator, "bin/d") == 0) {
+        exclude->bind = vsjson_decode_string (value);
+    }
+    else
+        return -1;
+
+    return 0;
+}
 
 
 int main() {
@@ -284,6 +316,30 @@ int main() {
         memset (&exclude, 0, sizeof (exclude_t));
 
         int rv = vsjson_walk_through (vsjson, exclude_callback, &exclude);
+        assert (rv == 0);
+
+        assert (strcmp (exclude.client, "Alfonz Tekvicka") == 0);
+        assert (strcmp (exclude.mlmserver_name, "Jon/Doe") == 0);
+        assert (strcmp (exclude.mlmserver_bind_endpoint, "tcp://*:9999") == 0);
+        assert (strcmp (exclude.mlmserver_security_mechanism, "plain") == 0);
+        assert (strcmp (exclude.bind, "no") == 0);
+
+        vsjson_destroy (&vsjson);
+        printf ("OK\n");
+    }
+    {
+        printf (" * separator ");
+        // -----------------------------------------
+        vsjson_t *vsjson = vsjson_new (exclude);
+        assert (vsjson);
+
+        vsjson_set_separator (vsjson, '#');
+        assert (vsjson_separator (vsjson) == '#');
+
+        exclude_t exclude;
+        memset (&exclude, 0, sizeof (exclude_t));
+
+        int rv = vsjson_walk_through (vsjson, separator_callback, &exclude);
         assert (rv == 0);
 
         assert (strcmp (exclude.client, "Alfonz Tekvicka") == 0);
