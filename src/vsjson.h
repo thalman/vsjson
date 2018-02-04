@@ -27,18 +27,17 @@ typedef int (vsjson_callback_t)(const char *locator, const char *value, void *da
 //  callback function for each item.
 //  Returns 0 on success, non-zero otherwise
 int
-vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
-
+    vsjson_parse (const char *json, vsjson_callback_t *func, void *data);
 
 //  Create a new parser object from input json string
 //  Returns NULL if not enough memory.
 //  You must call `vsjson_destroy ()` to destroy newly allocated parser object.
 vsjson_t *
-vsjson_new (const char *json);
+    vsjson_new (const char *json);
 
 //  Destroy parser object
 void
-vsjson_destroy (vsjson_t **self_p);
+    vsjson_destroy (vsjson_t **self_p);
 
 // get first json token, usually "[" or "{"
 // tokens are [ ] { } , : string (quote included)
