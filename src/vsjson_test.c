@@ -324,6 +324,12 @@ int main() {
         assert (strcmp (exclude.mlmserver_security_mechanism, "plain") == 0);
         assert (strcmp (exclude.bind, "no") == 0);
 
+        free (exclude.client);
+        free (exclude.mlmserver_name);
+        free (exclude.mlmserver_bind_endpoint);
+        free (exclude.mlmserver_security_mechanism);
+        free (exclude.bind);
+        
         vsjson_destroy (&vsjson);
         printf ("OK\n");
     }
@@ -347,6 +353,12 @@ int main() {
         assert (strcmp (exclude.mlmserver_bind_endpoint, "tcp://*:9999") == 0);
         assert (strcmp (exclude.mlmserver_security_mechanism, "plain") == 0);
         assert (strcmp (exclude.bind, "no") == 0);
+
+        free (exclude.client);
+        free (exclude.mlmserver_name);
+        free (exclude.mlmserver_bind_endpoint);
+        free (exclude.mlmserver_security_mechanism);
+        free (exclude.bind);
 
         vsjson_destroy (&vsjson);
         printf ("OK\n");
